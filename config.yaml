@@ -1,0 +1,14 @@
+defaults:
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+preprocessing:
+  active: False
+  input_file: /home/sebalzer/Documents/Projects/ATTRAS_Amyloidose/Data/4D/filtered_phases_Out_MyoCa.csv
+  label_file: /home/sebalzer/Documents/Projects/ATTRAS_Amyloidose/Data/ATTRAS_TAVI_Redcap_ID.xlsx
