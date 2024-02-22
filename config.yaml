@@ -8,7 +8,17 @@ hydra:
   run:
     dir: .
 
+n_workers: 24
+
 preprocessing:
   active: False
   input_file: /home/sebalzer/Documents/Projects/ATTRAS_Amyloidose/Data/4D/filtered_phases_Out_MyoCa.csv
   label_file: /home/sebalzer/Documents/Projects/ATTRAS_Amyloidose/Data/ATTRAS_TAVI_Redcap_ID.xlsx
+
+time_series:
+  test_size: 0.3
+  seed: 42
+  scoring: 'roc_auc'
+  models:
+    KNN: True
+    

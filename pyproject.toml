@@ -5,7 +5,7 @@ description = ""
 authors = ["cardionaut"]
 
 [tool.poetry.dependencies]
-python = "^3.9.13"
+python = ">=3.9.13, <3.13"
 hydra-core = "*"
 loguru = "^0.6.0"
 openpyxl = "^3.0.10"
@@ -15,7 +15,8 @@ seaborn = "^0.11.2"
 pylint = "^2.15.0"
 omegaconf = "^2.2"
 xlsxwriter = "^3.0.7"
-sktime = "*"
+sktime = "^0.26.0"
+pandas = "^1.5.3"
 
 
 [tool.poetry.group.dev.dependencies]

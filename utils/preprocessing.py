@@ -15,6 +15,7 @@ class Preprocessing:
     def __call__(self) -> pd.DataFrame:
         self.read_data()
         self.extract_id_and_phase()
+        self.ensure_same_length()
         self.add_labels()
         self.save_preprocessed_data()
 
@@ -31,7 +32,15 @@ class Preprocessing:
         self.data['id'] = self.data['Image Name'].apply(lambda x: x.split('_')[1])
         self.data['id'] = self.data['id'].astype(int)
         self.data['phase'] = self.data['Image Name'].apply(lambda x: x.split('.')[-3].split('_')[-1])
+        self.data['phase'] = self.data['phase'].astype(int)
         self.data = self.data.drop(columns=['Image Name'])
+
+    def ensure_same_length(self) -> None:
+        logger.info("Ensuring that each patient has the same number of phases")
+        num_phases = self.data['phase'].max()
+        phases_per_patient = self.data.groupby('id')['phase'].nunique()
+        patients_with_missing_phases = phases_per_patient[phases_per_patient != num_phases].index
+        self.data = self.data[~self.data['id'].isin(patients_with_missing_phases)]
 
     def add_labels(self) -> None:
         data_ids = set(self.data['id'])
