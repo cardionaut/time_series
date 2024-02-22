@@ -35,7 +35,14 @@ class TimeSeries:
         self.ids = data[['id', 'ATTR_Amyloidose']].drop_duplicates()
         self.data_x = data.drop(columns=['ATTR_Amyloidose'])
         self.data_x = self.data_x.set_index(['id', 'phase'])  # sktime requires a MultiIndex
+        logger.debug(self.data_x.shape)
         self.data_y = data['ATTR_Amyloidose']
+
+        from sktime.datasets import load_basic_motions
+
+        x_train, y_train = load_basic_motions(split='train', return_type='pd-multiindex', return_X_y=True)
+        logger.debug(x_train.shape)
+        logger.debug(y_train.shape)
 
     def split_data(self) -> None:
         train_indices, test_indices = train_test_split(  # split by patient ID
@@ -50,7 +57,9 @@ class TimeSeries:
         self.x_train = self.data_x.loc[train_indices, :]
         self.x_test = self.data_x.loc[test_indices, :]
         self.y_train = self.data_y.loc[train_indices]
+        self.y_train = np.array(self.y_train)
         self.y_test = self.data_y.loc[test_indices]
+        self.y_test = np.array(self.y_test)
 
     def fit_and_evaluate(self) -> None:
         logger.info("Fitting and evaluating the model")
@@ -64,7 +73,7 @@ class TimeSeries:
             n_jobs=self.n_workers,
             scoring=self.scoring,
         )
-        logger.debug(self.y_train)
+        logger.debug(self.x_train.shape)
         gcv.fit(self.x_train, self.y_train)
 
         prediction = gcv.predict(self.x_test)
