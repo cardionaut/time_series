@@ -11,14 +11,13 @@ from utils.time_series import TimeSeries
 
 @hydra.main(version_base=None, config_path='.', config_name='config')
 def main(config: DictConfig) -> None:
+    path, extension = os.path.splitext(config.preprocessing.input_file)
     if config.preprocessing.active:
         data = Preprocessing(config)()
     else:  # data already preprocessed
-        path, extension = os.path.splitext(config.preprocessing.input_file)
         data = pd.read_csv(path + '_preprocessed' + extension)
 
-    results = TimeSeries(config, data)()
-    
+    TimeSeries(config, data, results_path=path + '_results.csv')()
 
 
 if __name__ == '__main__':
