@@ -19,9 +19,12 @@ time_series:
   test_size: 0.3
   seed: 42
   scoring: 'roc_auc'
+  corr_threshold: 0.95
   trafos:
+    None: True
     PCA: True
   trafo_params:
+    None: {}
     PCA:
       trafo___n_components: [1, 2, 3]
   models:
@@ -34,6 +37,15 @@ time_series:
     tsfresh: False
     random_interval: True
     CNN: True
+    CNTC: False
+    FCN: True
+    LSTMFCN: True
+    MACNN: True
+    MCDCNN: True
+    MLP: True
+    ResNet: True
+    SimpleRNN: True
+    TapNet: True
   model_params:
     KNN:
       kneighbours___n_neighbors: [3, 5, 7]
@@ -54,5 +66,14 @@ time_series:
     random_interval:
       random_interval___n_estimators: [100, 200, 300]
     CNN: {}
+    CNTC: {}
+    FCN: {}
+    LSTMFCN: {}
+    MACNN: {}
+    MCDCNN: {}
+    MLP: {}
+    ResNet: {}
+    SimpleRNN: {}
+    TapNet: {}
   
     

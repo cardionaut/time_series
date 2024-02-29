@@ -4,11 +4,9 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import VarianceThreshold
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 import sklearn.metrics as metrics
 from sktime.classification.compose import ClassifierPipeline
-from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
 
 from utils.init_estimators import init_estimators
 
@@ -20,6 +18,7 @@ class TimeSeries:
         self.n_workers = config.n_workers
         self.seed = config.time_series.seed
         self.scoring = config.time_series.scoring
+        self.corr_threshold = config.time_series.corr_threshold
         np.random.seed(self.seed)
         self.prepare_data(data)
         self.trafos, self.models = init_estimators(config)
@@ -45,6 +44,7 @@ class TimeSeries:
             trafo_params = self.config.time_series.trafo_params[trafo_name]
             for model_name, model in self.models.items():
                 if ((self.results['trafo'] == trafo_name) & (self.results['model'] == model_name)).any():
+                    logger.info(f"Skipping {trafo_name} * {model_name} because it has already been evaluated")
                     continue
                 model_params = self.config.time_series.model_params[model_name]
                 param_grid = {**trafo_params, **model_params}
@@ -79,18 +79,28 @@ class TimeSeries:
         )
         train_indices = train_indices['id'].values
         test_indices = test_indices['id'].values
-
-        scaler = StandardScaler()
         x_train = self.data_x.loc[train_indices, :]
         x_test = self.data_x.loc[test_indices, :]
+        y_train = self.data_y.loc[train_indices]
+        y_test = self.data_y.loc[test_indices]
+
+        scaler = StandardScaler()
         x_train.loc[:, :] = scaler.fit_transform(x_train)
         x_test.loc[:, :] = scaler.transform(x_test)
+
+        corr_matrix = x_train.corr()
+        importances = x_train.corrwith(y_train, axis=0).abs()
+        importances = importances.sort_values(ascending=False)
+        corr_matrix = corr_matrix.reindex(index=importances.index, columns=importances.index).abs()
+        upper_triangle = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+        to_drop = [col for col in upper_triangle.columns if any(upper_triangle[col] > self.corr_threshold)]
+        x_train = x_train.drop(columns=to_drop)
+        x_test = x_test.drop(columns=to_drop)
+
         self.x_train = x_train.values.reshape(len(train_indices), x_train.shape[1], self.num_phases)
         self.x_test = x_test.values.reshape(len(test_indices), x_test.shape[1], self.num_phases)
-        self.y_train = self.data_y.loc[train_indices]
-        self.y_test = self.data_y.loc[test_indices]
-        self.y_train = np.array(self.y_train)
-        self.y_test = np.array(self.y_test)
+        self.y_train = np.array(y_train)
+        self.y_test = np.array(y_test)
 
     def fit_and_evaluate(self, trafo, model, param_grid) -> None:
         logger.info(f"Fitting and evaluating {trafo} * {model}")
